@@ -1,0 +1,43 @@
+Implement:
+
+    00E0 (clear screen)
+    1NNN (jump)
+    6XNN (set register VX)
+    7XNN (add value to register VX)
+    ANNN (set index register I)
+    DXYN (display/draw)
+
+each one is 4 nibbles = u4 ^4 = (2^4)^4 = u16 possible combinations
+Maybe from 2 bytes would be best; first byte entirely determines instruction type
+Nah just do u16
+
+.rom or .ch8 file loaded into memory, start stepping along parsing instructions. For now just
+
+- 4096 bytes of RAM, indexed by PC and I. This is where the program is loaded into.
+- Variables V1..VF: u8 each. (00-FF). Set using 6XNN.
+- Index register I: u32. (0000-0FFF). Points to some memory. Set using ANNN.
+- Program counter PC: u32. (0000-0FFF). Points at current instruction. Set using 1NNN.
+- 64 x 32 pixel display.
+
+
+
+Less important:
+- A stack of 16-bit addresses for subroutines
+- 8-bit delay timer decremented at 60Hz if not 0
+- 8-bit sound timer which is same as above but beeps while nonzero
+
+
+
+
+Set the X coordinate to the value in VX modulo 64 (or, equivalently, VX & 63, where & is the binary AND operation)
+Set the Y coordinate to the value in VY modulo 32 (or VY & 31)
+Set VF to 0
+For N rows:
+    Get the Nth byte of sprite data, counting from the memory address in the I register (I is not incremented)
+    For each of the 8 pixels/bits in this sprite row (from left to right, ie. from most to least significant bit):
+        If the current pixel in the sprite row is on and the pixel at coordinates X,Y on the screen is also on, turn off the pixel and set VF to 1
+        Or if the current pixel in the sprite row is on and the screen pixel is not, draw the pixel at the X and Y coordinates
+        If you reach the right edge of the screen, stop drawing this row
+        Increment X (VX is not incremented)
+    Increment Y (VY is not incremented)
+    Stop if you reach the bottom edge of the screen
